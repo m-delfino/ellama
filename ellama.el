@@ -84,9 +84,10 @@
   (rx (minimal-match
        (literal "```") (zero-or-more anything))))
 
-(defun current-region-indentation ()
+(defun current-region-indentation (beg)
   (save-excursion
-    (goto-char (point-min))
+    (goto-char beg)
+    (goto-char (bol))
     (skip-chars-forward " \t\n")
     (current-indentation)))
 
@@ -312,11 +313,11 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 		  (region-end)
 		(point-max)))
 	 (text (buffer-substring-no-properties beg end))
-         (indent (current-region-indentation)))
+         (indent (current-region-indentation beg)))
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Regarding the following code, %s, give me just the code, without explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
+      "Regarding the following code, %s, give me just the code, without explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n``` without any leading indentation"
       change text)
      ellama--code-prefix
      ellama--code-suffix
@@ -335,11 +336,11 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 		  (region-end)
 		(point-max)))
 	 (text (buffer-substring-no-properties beg end))
-         (indent (current-region-indentation)))
+         (indent (current-region-indentation beg)))
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Enhance the following code, give me just the code, no explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
+      "Enhance the following code, give me just the code, no explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n``` without any leading indentation"
       text)
      ellama--code-prefix
      ellama--code-suffix
@@ -358,7 +359,7 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 		  (region-end)
 		(point-max)))
 	 (text (buffer-substring-no-properties beg end))
-         (indent (current-region-indentation)))
+         (indent (current-region-indentation beg)))
     (ellama-stream-filter
      (format
       "Continue the following code, only write new code in format ```language\n...\n```:\n```\n%s\n```"
