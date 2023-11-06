@@ -84,6 +84,12 @@
   (rx (minimal-match
        (literal "```") (zero-or-more anything))))
 
+(defun current-region-indentation ()
+  (save-excursion
+    (goto-char (point-min))
+    (skip-chars-forward " \t\n")
+    (current-indentation)))
+
 (defun ellama-stream (prompt &rest args)
   "Query ellama for PROMPT.
 ARGS contains keys for fine control.
@@ -121,7 +127,7 @@ in. Default value is (current-buffer).
 				  (spinner-stop)))
 			      (lambda (_ msg) (error "Error calling the LLM: %s" msg))))))))
 
-(defun ellama-stream-filter (prompt prefix suffix buffer point)
+(defun ellama-stream-filter (prompt prefix suffix buffer point indent)
   "Query ellama for PROMPT with filtering.
 In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
   (with-current-buffer buffer
@@ -131,13 +137,17 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	     (insert-text (lambda (text)
 			    ;; Erase and insert the new text between the marker cons.
 			    (with-current-buffer (marker-buffer start)
-			      (save-excursion
 				(goto-char start)
-				(delete-region start end)
 				;; remove prefix and suffix parts
-				(insert (string-trim-right
+                               (let ((old-length (- end start))
+                                     (output (string-trim
+                                         (string-trim-right
 					 (string-trim-left text prefix)
-					 suffix)))))))
+					 suffix) "[\n\r]+" "[\n\r]+")))
+                                 (delete-region start end)
+				 (insert output)
+                                 (indent-rigidly start (point) indent)
+                                 (lsp-on-change start (point) old-length))))))
         (set-marker start point)
         (set-marker end point)
         (set-marker-insertion-type start nil)
@@ -301,7 +311,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end)))
+	 (text (buffer-substring-no-properties beg end))
+         (indent (current-region-indentation)))
     (kill-region beg end)
     (ellama-stream-filter
      (format
@@ -310,7 +321,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
      ellama--code-prefix
      ellama--code-suffix
      (current-buffer)
-     beg)))
+     beg
+     indent)))
 
 ;;;###autoload
 (defun ellama-enhance-code ()
@@ -322,7 +334,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end)))
+	 (text (buffer-substring-no-properties beg end))
+         (indent (current-region-indentation)))
     (kill-region beg end)
     (ellama-stream-filter
      (format
@@ -331,7 +344,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
      ellama--code-prefix
      ellama--code-suffix
      (current-buffer)
-     beg)))
+     beg
+     indent)))
 
 ;;;###autoload
 (defun ellama-complete-code ()
@@ -343,7 +357,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end)))
+	 (text (buffer-substring-no-properties beg end))
+         (indent (current-region-indentation)))
     (ellama-stream-filter
      (format
       "Continue the following code, only write new code in format ```language\n...\n```:\n```\n%s\n```"
@@ -351,7 +366,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
      ellama--code-prefix
      ellama--code-suffix
      (current-buffer)
-     end)))
+     end
+     indent)))
 
 ;;;###autoload
 (defun ellama-add-code (description)
@@ -365,7 +381,8 @@ buffer."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end)))
+	 (text (buffer-substring-no-properties beg end))
+         (indent (current-indentation)))
     (ellama-stream-filter
      (format
       "Context: \n```\n%s\n```\nBased on this context, %s, only ouput the result in format ```\n...\n```"
@@ -373,7 +390,8 @@ buffer."
      ellama--code-prefix
      ellama--code-suffix
      (current-buffer)
-     end)))
+     (bol)
+     indent)))
 
 
 ;;;###autoload
