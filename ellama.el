@@ -316,7 +316,7 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Regarding the following code, %s, only ouput the result code in format ```language\n...\n```:\n```\n%s\n```"
+      "Regarding the following code, %s, give me just the code, without explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
       change text)
      ellama--code-prefix
      ellama--code-suffix
@@ -339,7 +339,7 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Enhance the following code, only ouput the result code in format ```language\n...\n```:\n```\n%s\n```"
+      "Enhance the following code, give me just the code, no explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
       text)
      ellama--code-prefix
      ellama--code-suffix
@@ -385,8 +385,8 @@ buffer."
          (indent (current-indentation)))
     (ellama-stream-filter
      (format
-      "Context: \n```\n%s\n```\nBased on this context, %s, only ouput the result in format ```\n...\n```"
-      text description)
+      "Context: \n```\n%s\n```\nBased on this context, %s, only output the result in format ```\n...\n```, give me only the code without explanation"
+      text description (number-to-string indent))
      ellama--code-prefix
      ellama--code-suffix
      (current-buffer)
