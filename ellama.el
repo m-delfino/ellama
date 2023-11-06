@@ -214,6 +214,8 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 (defun ellama-instant (prompt)
   "Prompt ellama for PROMPT to reply instantly."
   (let ((buffer (get-buffer-create (make-temp-name ellama-buffer))))
+    (with-current-buffer buffer
+      (funcall ellama-buffer-mode))
     (display-buffer buffer)
     (ellama-stream prompt :buffer buffer (point-min))))
 
