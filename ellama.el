@@ -312,12 +312,14 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end))
-         (indent (current-region-indentation beg)))
+         (indent (current-region-indentation beg))
+	 (text (apply #'concat
+                      (mapcar (lambda (line) (if (>= (length line) indent) (substring line indent -1) line))
+                            (s-split "\n" (buffer-substring-no-properties beg end))))))
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Regarding the following code, %s, give me just the code, without explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n``` without any leading indentation"
+      "Regarding the following code, %s, give me just the code, without explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
       change text)
      ellama--code-prefix
      ellama--code-suffix
@@ -335,12 +337,14 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end))
-         (indent (current-region-indentation beg)))
+         (indent (current-region-indentation beg))
+         (text (apply #'concat
+                      (mapcar (lambda (line) (if (>= (length line) indent) (substring line indent -1) line))
+                              (s-split "\n" (buffer-substring-no-properties beg end))))))
     (kill-region beg end)
     (ellama-stream-filter
      (format
-      "Enhance the following code, give me just the code, no explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n``` without any leading indentation"
+      "Enhance the following code, give me just the code, no explanation, only output the result code in format ```language\n...\n```:\n```\n%s\n```"
       text)
      ellama--code-prefix
      ellama--code-suffix
