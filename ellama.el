@@ -177,7 +177,6 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	(llm-chat-prompt-append-response
 	 ellama--chat-prompt prompt)
       (setq ellama--chat-prompt (llm-make-simple-chat-prompt prompt)))
-    (save-excursion
       (goto-char (point-max))
       (insert "## " ellama-user-nick ":\n" prompt "\n\n"
 	      "## " ellama-assistant-nick ":\n")
@@ -188,10 +187,9 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 	      (lambda (text)
 		;; Erase and insert the new text between the marker cons.
 		(with-current-buffer (marker-buffer start)
-		  (save-excursion
 		    (goto-char start)
 		    (delete-region start end)
-		    (insert text))))))
+		    (insert text)))))
         (set-marker start point)
         (set-marker end point)
         (set-marker-insertion-type start nil)
@@ -203,12 +201,10 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 			    (lambda (text)
 			      (funcall insert-text text)
 			      (with-current-buffer ellama-buffer
-				(save-excursion
 				  (goto-char (point-max))
 				  (insert "\n\n"))
-				(spinner-stop)))
-			    (lambda (_ msg) (error "Error calling the LLM: %s" msg)))))))
-
+				(spinner-stop))
+			    (lambda (_ msg) (error "Error calling the LLM: %s" msg))))))
 ;;;###autoload
 (defalias 'ellama-ask 'ellama-chat)
 
