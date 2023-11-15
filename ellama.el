@@ -310,7 +310,7 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 		(point-max)))
          (indent (current-region-indentation beg))
 	 (text (apply #'concat
-                      (mapcar (lambda (line) (if (>= (length line) indent) (substring line indent -1) line))
+                      (mapcar (lambda (line) (if (and (> indent 0) (>= (length line) indent)) (substring line indent -1) line))
                             (s-split "\n" (buffer-substring-no-properties beg end))))))
     (kill-region beg end)
     (ellama-stream-filter
@@ -335,7 +335,7 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
 		(point-max)))
          (indent (current-region-indentation beg))
          (text (apply #'concat
-                      (mapcar (lambda (line) (if (>= (length line) indent) (substring line indent -1) line))
+                      (mapcar (lambda (line) (if (and (> indent 0) (>= (length line) indent)) (substring line indent -1) line))
                               (s-split "\n" (buffer-substring-no-properties beg end))))))
     (kill-region beg end)
     (ellama-stream-filter
