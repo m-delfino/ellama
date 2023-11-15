@@ -371,18 +371,19 @@ In BUFFER at POINT will be inserted result between PREFIX and SUFFIX."
      indent)))
 
 ;;;###autoload
-(defun ellama-add-code (description)
+(defun ellama-add-code (arg description)
   "Add new code according to DESCRIPTION.
 Code will be generated with provided context from selected region or current
 buffer."
-  (interactive "sDescribe the code to be generated: ")
+  (interactive "P\nsDescribe the code to be generated: ")
   (let* ((beg (if (region-active-p)
 		  (region-beginning)
 		(point-min)))
 	 (end (if (region-active-p)
 		  (region-end)
 		(point-max)))
-	 (text (buffer-substring-no-properties beg end))
+         (buffer-text (buffer-substring-no-properties beg end))
+	 (text (if arg (concat (substring-no-properties (current-kill 0)) "\n" buffer-text) buffer-text))
          (indent (current-indentation)))
     (ellama-stream-filter
      (format
